@@ -13,13 +13,12 @@ readline.setPrompt(`
 What is the name of the scenario?
 `.trim() + '\n> ')
 
-const success = (scenName) => `
-Scenario [${scenName}] created.
+const success = `
 Folders made:
 _CARD_:     Store text for story cards in here.
 _TEXT_:     Store main text in here [story, memory, a/n].
 _SCRIPT_:   Store the scenario scripts in here. [input, context, output]
-_RESOURCE_: Store images, exported story cards, and other stuff in here
+_RESOURCE_: Store images, exported story cards, and other stuff in here.
 
 NOTE:
 Put whatever picture you have for the scenario in the scenario folder, and
@@ -63,18 +62,34 @@ const createFolder = (name) => fs.mkdirSync(fpath(name))
 const createFiles = (names, data='') => names.forEach(name => createFile(name, data))
 const createFolders = (names) => names.forEach(name => createFolder(name))
 
-// Create the scenario folder and its subfolders and files.
-readline.on('line', (line) => {
-	let scenName = sanitizeFilename(line.trim())
+var gettingInput = true
+
+function generateScenario(name) {
+	let scenName = sanitizeFilename(name.trim())
 
 	createFolder(scenName)
 	createFolders(_FOLDERS_.map(folder => fpath(scenName, folder)))
 	createFiles(_SCRIPTS_.map(script => fpath(scenName, '_SCRIPT_', script)), DEFAULT_SCRIPT)
 	createFiles(_TXTS_.map(txt => fpath(scenName, '_TEXT_', txt)))
 
-	console.log(success(scenName))
+	console.log(`Scenario [${scenName}] created.`)
+}
 
-	readline.close()
+// Create the scenario folder and its subfolders and files.
+readline.on('line', (line) => {
+	if (gettingInput) {
+		let names = line.split('|')
+
+		names.forEach(name => generateScenario(name))
+
+		console.log('\n' + success)
+
+		gettingInput = false
+		console.log('\n\nPress Enter to exit.')
+	}
+	else {
+		readline.close()
+	}
 })
 
 // Print prompt for input.
